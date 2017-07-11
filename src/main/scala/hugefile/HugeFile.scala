@@ -16,6 +16,16 @@ object HugeFile extends App {
   implicit val materializer = ActorMaterializer()
   import system.dispatcher
 
+  /*
+  * Runs on it's own dispatcher since it's blocking
+  * this can be customized
+  * config = akka.stream.blocking-io-dispatcher
+  * OR
+  *
+  * FileIO.fromPath(file)
+  *   .withAttributes(ActorAttributes.dispatcher("custom-blocking-io-dispatcher"))
+  *
+  * */
   val source: Source[(String, Long), Future[IOResult]] =
     FileIO.fromPath(Paths.get("src/main/resources/bitcoinData.csv"))
         .map(_.utf8String)
