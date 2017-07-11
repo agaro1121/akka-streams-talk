@@ -4,6 +4,7 @@ import scala.language.postfixOps
 import java.nio.file.Paths
 import akka.{Done, NotUsed, stream}
 import akka.actor.ActorSystem
+import akka.event.Logging
 import akka.stream._
 import akka.stream.scaladsl._
 import akka.util.ByteString
@@ -19,22 +20,29 @@ object UnzipExample extends App {
   val fileContents: Source[ByteString, Future[IOResult]] =
     FileIO.fromPath(Paths.get("src/main/resources/bitcoinData.csv"))
 
-  val splitItemAndProps: Flow[ByteString, (String, String), NotUsed] =
+  val splitItemAndPropsAndFilter: Flow[ByteString, (String, String), NotUsed] =
     Flow[ByteString]
+      .via(Framing.delimiter(
+        ByteString("\n"),
+        maximumFrameLength = 256,
+        allowTruncation = true
+      ))
       .map(_.utf8String)
       .map { str =>
         val head :: tail = str.split(",").toList
         (head, tail.mkString(","))
       }
+      .filterNot {
+        case (item, props) =>
+          props.contains("NaN") || item.contains("Timestamp")
+      }
 
-  val printer = Flow[(String, String)]
-    .map { case (item, props) =>
-      println(s"item=$item and props=$props")
-      (item, props)
-    }
+  val printer: Flow[(String, String), (String, String), NotUsed] =
+    Flow[(String, String)]
+      .log("printer")
+      .withAttributes(Attributes.logLevels(onElement = Logging.InfoLevel))
 
   val back2ByteString = Flow[String].map(ByteString(_))
-
 
   val sinkHead: Sink[ByteString, Future[IOResult]] = FileIO.toPath(Paths.get("ItemIds.txt"))
   val sinkTail: Sink[ByteString, Future[IOResult]] = FileIO.toPath(Paths.get("ItemProps.csv"))
@@ -46,7 +54,7 @@ object UnzipExample extends App {
 
       val unzipper = builder.add(Unzip[String, String])
 
-      fileContents ~> splitItemAndProps ~> printer ~> unzipper.in
+      fileContents ~> splitItemAndPropsAndFilter ~> printer ~> unzipper.in
       unzipper.out0 ~> back2ByteString ~> sinkH
       unzipper.out1 ~> back2ByteString ~> sinkT
 
