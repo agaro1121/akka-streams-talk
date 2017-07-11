@@ -4,8 +4,6 @@ import akka.actor.ActorSystem
 import scala.language.postfixOps
 import akka.stream._
 import akka.stream.scaladsl._
-import customgraphs.UnzipExample.system
-
 import scala.concurrent.Future
 
 object BroadcastExample extends App {

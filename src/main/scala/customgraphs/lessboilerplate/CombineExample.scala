@@ -44,10 +44,10 @@ object CombineExample extends App {
   * Fan Out
   *
   * */
-  val sendRmotely = Sink.actorRef(system.actorOf(EchoActor.props), PoisonPill)
+  val remoteProcessing = Sink.actorRef(system.actorOf(EchoActor.props), PoisonPill)
   val localProcessing = Sink.foreach[Int](println)
 
-  val sink = Sink.combine(sendRmotely, localProcessing)(Broadcast[Int](_))
+  val sink = Sink.combine(remoteProcessing, localProcessing)(Broadcast[Int](_))
 
   Source(List(0, 1, 2)).runWith(sink)
 
