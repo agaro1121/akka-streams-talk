@@ -30,7 +30,8 @@ object UnzipExample extends App {
       .map(_.utf8String)
       .map { str =>
         val head :: tail = str.split(",").toList
-        (head, tail.mkString(","))
+        val newLine = "\n"
+        (head + newLine, tail.mkString(",") + newLine)
       }
       .filterNot {
         case (item, props) =>
