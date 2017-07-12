@@ -11,7 +11,6 @@ object PartialGraphExample extends App {
   implicit val materializer = ActorMaterializer()
 
   val pickMaxOfTwoPartialGraph = GraphDSL.create() { implicit b =>
-    import GraphDSL.Implicits._
 
     val zip = b.add(ZipWith[Int, Int, Int](math.max))
 

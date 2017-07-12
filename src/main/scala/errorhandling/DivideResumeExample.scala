@@ -68,6 +68,9 @@ object DivideResumeExample2 extends App {
 
 }
 
+/*
+* State is lost on restart so final answer is different
+* */
 object DivideRestartExample extends App {
 
   implicit val system = ActorSystem("test-system")

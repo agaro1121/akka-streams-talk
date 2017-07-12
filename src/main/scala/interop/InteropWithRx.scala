@@ -15,10 +15,21 @@ object InteropWithRx extends App {
   implicit val system = ActorSystem("test-system")
   implicit val materializer = ActorMaterializer()
 
+  /*
+  * Rx Observable
+  * */
   val o: Observable[Int] = Observable.from(1 to 10)
-  val publisher = RxReactiveStreams.toPublisher(toJavaObservable(o))
-  val source = Source.fromPublisher(publisher)
 
+  /*
+  * Reactive Streams Publisher
+  * */
+  val publisher = RxReactiveStreams.toPublisher(toJavaObservable(o))
+
+  /*
+  * Akka Streams Source from
+  * Reactive Streams Publisher
+  * */
+  val source = Source.fromPublisher(publisher)
   source.runWith(Sink.foreach(println))
 
 }

@@ -5,6 +5,7 @@ import java.nio.file.Paths
 import scala.language.postfixOps
 import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
+import akka.event.Logging
 import akka.stream._
 import akka.stream.scaladsl._
 
@@ -18,17 +19,19 @@ import akka.util.ByteString
 
 import scala.io.StdIn
 
+// watch -d -n 1 netstat -n -p tcp
 object Server extends App {
 
   implicit val system = ActorSystem("test-system")
   implicit val materializer = ActorMaterializer()
   import system.dispatcher
 
-  val printFlow: Flow[ByteString, ByteString, NotUsed] = Flow[ByteString].map{
-    bs =>
-      println(bs.utf8String)
-      bs
-  }
+  val printFlow: Flow[ByteString, ByteString, NotUsed] =
+    Flow[ByteString]
+      .log("PrintFlow", byteString => byteString.utf8String)
+      .withAttributes(Attributes.logLevels(onElement = Logging.InfoLevel))
+      .throttle(1, 100 milliseconds, 1, ThrottleMode.shaping) // for effect
+
 
   val source: Source[ByteString, Future[IOResult]] =
     FileIO.fromPath(Paths.get("src/main/resources/bitcoinData.csv"))
@@ -41,7 +44,7 @@ object Server extends App {
   val bindingFuture: Future[Http.ServerBinding] =
     Http().bindAndHandle(route, interface = "localhost", port)
 
-  println(s"Server online at http://localhost:$port/\nPress RETURN to stop...")
+  println(s"Server online at http://localhost:$port/data\nPress RETURN to stop...")
 
   StdIn.readLine() // let it run until user presses return
 

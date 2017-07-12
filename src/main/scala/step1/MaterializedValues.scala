@@ -11,20 +11,27 @@ import scala.concurrent.duration._
 object MaterializedValues extends App {
 
   implicit val system = ActorSystem("test-system")
-  implicit val materializer = ActorMaterializer()
+  implicit val mat = ActorMaterializer()
 
-  val source: Source[Int, NotUsed] = Source(1 to 10).throttle(1, 1 second, 8, ThrottleMode.shaping)
+  val source: Source[Int, NotUsed] =
+    Source(1 to 10)
+      .throttle(1, 1 second, 8, ThrottleMode.shaping)
 
-  val sink: Sink[Any, Future[Done]] = Sink.foreach(println)
+  val sink: Sink[Any, Future[Done]] =
+    Sink.foreach(println)
 
 
-  val left: RunnableGraph[NotUsed] = source.toMat(sink)(Keep.left)
+  val left: RunnableGraph[NotUsed] =
+    source.toMat(sink)(Keep.left)
 
-  val right: RunnableGraph[Future[Done]] = source.toMat(sink)(Keep.right)
+  val right: RunnableGraph[Future[Done]] =
+    source.toMat(sink)(Keep.right)
 
-  val both: RunnableGraph[(NotUsed, Future[Done])] = source.toMat(sink)(Keep.both)
+  val both: RunnableGraph[(NotUsed, Future[Done])] =
+    source.toMat(sink)(Keep.both)
 
-  val none: RunnableGraph[NotUsed] = source.toMat(sink)(Keep.none)
+  val none: RunnableGraph[NotUsed] =
+    source.toMat(sink)(Keep.none)
 
   left.run()
   right.run()

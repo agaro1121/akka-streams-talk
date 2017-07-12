@@ -9,8 +9,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /*
-* Slow producer
-* Fas consumer
+* Slow Producer
+* Fast Consumer
 * */
 object ExpandExample extends App {
 
@@ -21,7 +21,7 @@ object ExpandExample extends App {
   val source = Source(1 to 5).throttle(1, 300 milliseconds, 1, ThrottleMode.shaping)
 
   val flow = Flow[Int]
-      .expand(Iterator.continually(_)) //fill the void with the last element
+      .expand(Iterator.continually(_)) // Producer is slow - fill the void with the last element
 
   val sink = Sink.foreach(println)
 

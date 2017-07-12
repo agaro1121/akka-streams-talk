@@ -9,8 +9,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /*
-* Fast Producer
-* Slow consumer
+* Slow Producer
+* Fast Consumer
 * */
 object ConflateExample extends App {
 
